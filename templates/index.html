@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Classification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .upload-form {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        #image-preview {
+            max-width: 400px;
+            max-height: 400px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .upload-button {
+            margin-top: 20px;
+        }
+
+        .prediction-result {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function previewImage(event) {
+            var input = event.target;
+            var reader = new FileReader();
+
+            reader.onload = function () {
+                var dataURL = reader.result;
+                var img = document.getElementById('image-preview');
+                img.src = dataURL;
+            };
+
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function submitForm() {
+            var form = document.getElementById('upload-form');
+            var formData = new FormData(form);
+
+            $.ajax({
+                url: '/',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    showPredictionResult(response);
+                },
+                error: function (error) {
+                    showError('Error: ' + error.responseJSON.error);
+                }
+            });
+        }
+
+        function showPredictionResult(response) {
+            var vgg16Prediction = response.vgg16_prediction;
+            var densenet121Prediction = response.densenet121_prediction;
+            var resnet18Prediction = response.resnet18_prediction;
+
+            var resultElement = document.getElementById('prediction-result');
+            resultElement.innerHTML = '<p><strong>Prediction Results:</strong></p>' +
+                '<p>VGG16: ' + vgg16Prediction + '</p>' +
+                '<p>DenseNet121: ' + densenet121Prediction + '</p>' +
+                '<p>ResNet18: ' + resnet18Prediction + '</p>';
+        }
+
+        function showError(message) {
+            var errorElement = document.getElementById('prediction-result');
+            errorElement.innerHTML = '<p class="error">' + message + '</p>';
+        }
+    </script>
+</head>
+<body>
+    <h1>Image Classification</h1>
+    <div class="upload-form">
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" name="file" id="image-input" accept="image/*" onchange="previewImage(event)">
+            <br>
+            <img id="image-preview" src="" alt="Image Preview">
+            <br>
+            <input type="button" class="upload-button" value="Upload" onclick="submitForm()">
+        </form>
+    </div>
+    <div id="prediction-result"></div>
+</body>
+</html>
